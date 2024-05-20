@@ -1,0 +1,3 @@
+1111.... train data di data.py (penting sebelum test di train doeloe)
+test data di test.py
+main program di bagus_pyqt.py

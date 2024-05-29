@@ -1,19 +1,21 @@
-import pandas as pd #digunakan untuk import pandas, pandas membaca data
-import numpy as np #digunakan untuk import numpy, numpy mengolah data berkaitan dengan statistika dan matematika
+import pandas as pd  # digunakan untuk import pandas, pandas membaca data
+import numpy as np  # digunakan untuk import numpy, numpy mengolah data berkaitan dengan statistika dan matematika
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-sc = StandardScaler() #melakukan proses transformasi menjadi normalisasi dengan rumus deviasi
-data=pd.read_csv("TEH1.csv")
+sc = (
+    StandardScaler()
+)  # melakukan proses transformasi menjadi normalisasi dengan rumus deviasi
+data = pd.read_csv("TEH1.csv")
 print(data)
-df=pd.DataFrame(data)
-X=df.iloc[:,1:5].values # Fitur
-y=df.iloc[:,0].values # Target
+df = pd.DataFrame(data)
+X = df.iloc[:, 1:5].values  # Fitur
+y = df.iloc[:, 0].values  # Target
 le = LabelEncoder()
-y=le.fit_transform(y)
+y = le.fit_transform(y)
 print(y)
 print(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
@@ -33,17 +35,19 @@ y_test_one_hot = tf.keras.utils.to_categorical(y_test_encoded, num_classes=3)
 
 # Tentukan arsitektur model
 model = tf.keras.models.Sequential()
-model.add(tf.keras.layers.Dense(units=8, activation='relu', input_shape=(X_train.shape[1],))) #hidden layer 1 
-#model.add(tf.keras.layers.Dense(units=4, activation='relu'))
-model.add(tf.keras.layers.Dense(units=3, activation='softmax')) # Output layer
+model.add(
+    tf.keras.layers.Dense(units=8, activation="relu", input_shape=(X_train.shape[1],))
+)  # hidden layer 1
+# model.add(tf.keras.layers.Dense(units=4, activation='relu'))
+model.add(tf.keras.layers.Dense(units=3, activation="softmax"))  # Output layer
 
 # Compile the model
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
 # Train the model
 model.fit(X_train, y_train_one_hot, epochs=100, batch_size=128)
 
-model.save('trained_model.h5')
+model.save("trained_model.h5")
 
 # Evaluate the model
 evaluation_results = model.evaluate(X_test, y_test_one_hot, batch_size=128)
@@ -53,9 +57,9 @@ print("Evaluation results:")
 for metric_name, metric_value in zip(model.metrics_names, evaluation_results):
     print(f"{metric_name}: {metric_value}")
 
-manual_data = np.array([[786,883,1757,732]])
+manual_data = np.array([[786, 883, 1757, 732]])
 
-classes = ['Hijau', 'Hitam', 'Oolong']
+classes = ["Hijau", "Hitam", "Oolong"]
 
 # Lakukan prediksi dengan model
 predictions = model.predict(manual_data)

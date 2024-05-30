@@ -1,11 +1,14 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
 import serial
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QDateTime
+from PyQt5.QtGui import QFont, QColor, QPalette
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout,
+    QLabel, QTabWidget, QTableWidget, QTableWidgetItem
+)
 
 class SerialReader(QThread):
     data_received = pyqtSignal(str)
@@ -39,36 +42,56 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setWindowTitle("Klasifikasi Teh")
-        self.resize(512, 512)
+        self.resize(600, 400)
         self.model = tf.keras.models.load_model("trained_model.h5")
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(["Hijau", "Hitam", "Oolong"])
-        self.initUI()
+        self.history_data = []
+        self.init_ui()
         self.serial_reader = SerialReader(port='COM3')  # Ganti 'COM3' dengan port serial Anda
         self.serial_reader.data_received.connect(self.handle_serial_data)
         self.serial_reader.start()
 
-    def initUI(self):
-        main_layout = QVBoxLayout()
+    def init_ui(self):
+        self.layout = QVBoxLayout(self)
+        
+        # Add tab widget
+        self.tabs = QTabWidget()
+        self.tab_classification = QWidget()
+        self.tab_history = QWidget()
+        
+        self.tabs.addTab(self.tab_classification, "Klasifikasi")
+        self.tabs.addTab(self.tab_history, "Riwayat")
+        
+        # Set layout for classification tab
+        self.classification_layout = QVBoxLayout()
+        self.tab_classification.setLayout(self.classification_layout)
         
         # Judul
-        layout_judul = QHBoxLayout()
         judul = QLabel("Klasifikasi Jenis Teh")
-        judul_font = QFont("Arial", 20)
+        judul_font = QFont("Arial", 24, QFont.Bold)
         judul.setFont(judul_font)
-        layout_judul.addWidget(judul)
-        layout_judul.setAlignment(Qt.AlignCenter)
-
+        judul.setAlignment(Qt.AlignCenter)
+        
         # Indikator hasil
         self.indikator = QLabel("Menunggu data...")
-        self.indikator.setFont(judul_font)
-        layout_indikator = QVBoxLayout()
-        layout_indikator.addWidget(self.indikator)
-        layout_indikator.setAlignment(Qt.AlignCenter)
-
-        main_layout.addLayout(layout_judul)
-        main_layout.addLayout(layout_indikator)
-        self.setLayout(main_layout)
+        self.indikator.setFont(QFont("Arial", 18))
+        self.indikator.setAlignment(Qt.AlignCenter)
+        
+        self.classification_layout.addWidget(judul)
+        self.classification_layout.addWidget(self.indikator)
+        
+        # Set layout for history tab
+        self.history_layout = QVBoxLayout()
+        self.tab_history.setLayout(self.history_layout)
+        
+        # History table
+        self.history_table = QTableWidget()
+        self.history_table.setColumnCount(4)
+        self.history_table.setHorizontalHeaderLabels(["Timestamp", "Klasifikasi", "Suhu (°C)", "Kelembaban (%)"])
+        self.history_layout.addWidget(self.history_table)
+        
+        self.layout.addWidget(self.tabs)
 
     def handle_serial_data(self, data):
         try:
@@ -83,15 +106,47 @@ class MainWindow(QWidget):
             
             # Update UI
             self.indikator.setText(f"Hasil Klasifikasi: {predicted_class_name}")
+            
+            # Add to history
+            timestamp = QDateTime.currentDateTime().toString("yyyy-MM-dd HH:mm:ss")
+            self.history_data.append((timestamp, predicted_class_name, temp, humi))
+            self.update_history_table()
         except Exception as e:
             self.indikator.setText(f"Error: {e}")
 
+    def update_history_table(self):
+        self.history_table.setRowCount(len(self.history_data))
+        for row, (timestamp, classification, temp, humi) in enumerate(self.history_data):
+            self.history_table.setItem(row, 0, QTableWidgetItem(timestamp))
+            self.history_table.setItem(row, 1, QTableWidgetItem(classification))
+            self.history_table.setItem(row, 2, QTableWidgetItem(f"{temp:.2f}"))
+            self.history_table.setItem(row, 3, QTableWidgetItem(f"{humi:.2f}"))
+    
     def closeEvent(self, event):
         self.serial_reader.stop()
         event.accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, Qt.white)
+    palette.setColor(QPalette.Base, QColor(15, 15, 15))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, Qt.white)
+    palette.setColor(QPalette.ToolTipText, Qt.white)
+    palette.setColor(QPalette.Text, Qt.white)
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, Qt.white)
+    palette.setColor(QPalette.BrightText, Qt.red)
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, Qt.black)
+    
+    app.setPalette(palette)
+    
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

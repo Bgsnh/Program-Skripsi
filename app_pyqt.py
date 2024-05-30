@@ -87,8 +87,8 @@ class MainWindow(QWidget):
         
         # History table
         self.history_table = QTableWidget()
-        self.history_table.setColumnCount(4)
-        self.history_table.setHorizontalHeaderLabels(["Timestamp", "Klasifikasi", "Suhu (°C)", "Kelembaban (%)"])
+        self.history_table.setColumnCount(8)
+        self.history_table.setHorizontalHeaderLabels(["Timestamp", "Klasifikasi", "Suhu (°C)", "Kelembaban (%)", "MQ3", "MQ4", "MQ5", "MQ135"])
         self.history_layout.addWidget(self.history_table)
         
         self.layout.addWidget(self.tabs)

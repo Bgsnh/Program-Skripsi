@@ -42,17 +42,17 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setWindowTitle("Klasifikasi Teh")
-        self.resize(600, 400)
+        self.resize(800, 600)
         self.model = tf.keras.models.load_model("trained_model.h5")
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(["Hijau", "Hitam", "Oolong"])
         self.history_data = []
-        self.init_ui()
-        self.serial_reader = SerialReader(port='COM3')  # Ganti 'COM3' dengan port serial Anda
+        self.initUI()
+        self.serial_reader = SerialReader(port='COM8')  # Ganti 'COM3' dengan port serial Anda
         self.serial_reader.data_received.connect(self.handle_serial_data)
         self.serial_reader.start()
 
-    def init_ui(self):
+    def initUI(self):
         self.layout = QVBoxLayout(self)
         
         # Add tab widget
@@ -88,7 +88,7 @@ class MainWindow(QWidget):
         # History table
         self.history_table = QTableWidget()
         self.history_table.setColumnCount(8)
-        self.history_table.setHorizontalHeaderLabels(["Timestamp", "Klasifikasi", "Suhu (°C)", "Kelembaban (%)", "MQ3", "MQ4", "MQ5", "MQ135"])
+        self.history_table.setHorizontalHeaderLabels(["Timestamp", "Klasifikasi", "Suhu (°C)", "Kelembaban (%)", "Mq3", "Mq4", "Mq5", "Mq135"])
         self.history_layout.addWidget(self.history_table)
         
         self.layout.addWidget(self.tabs)
@@ -109,18 +109,22 @@ class MainWindow(QWidget):
             
             # Add to history
             timestamp = QDateTime.currentDateTime().toString("yyyy-MM-dd HH:mm:ss")
-            self.history_data.append((timestamp, predicted_class_name, temp, humi))
+            self.history_data.append((timestamp, predicted_class_name, temp, humi, mq3, mq4, mq5, mq135))
             self.update_history_table()
         except Exception as e:
             self.indikator.setText(f"Error: {e}")
 
     def update_history_table(self):
         self.history_table.setRowCount(len(self.history_data))
-        for row, (timestamp, classification, temp, humi) in enumerate(self.history_data):
+        for row, (timestamp, classification, temp, humi, mq3, mq4, mq5, mq135) in enumerate(self.history_data):
             self.history_table.setItem(row, 0, QTableWidgetItem(timestamp))
             self.history_table.setItem(row, 1, QTableWidgetItem(classification))
             self.history_table.setItem(row, 2, QTableWidgetItem(f"{temp:.2f}"))
             self.history_table.setItem(row, 3, QTableWidgetItem(f"{humi:.2f}"))
+            self.history_table.setItem(row, 4, QTableWidgetItem(f"{mq3:.2f}"))
+            self.history_table.setItem(row, 5, QTableWidgetItem(f"{mq4:.2f}"))
+            self.history_table.setItem(row, 6, QTableWidgetItem(f"{mq5:.2f}"))
+            self.history_table.setItem(row, 7, QTableWidgetItem(f"{mq135:.2f}"))
     
     def closeEvent(self, event):
         self.serial_reader.stop()

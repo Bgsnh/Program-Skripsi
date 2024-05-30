@@ -1,11 +1,14 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
 import serial
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QDateTime
+from PyQt5.QtGui import QFont, QColor, QPalette
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout,
+    QLabel, QTabWidget, QTableWidget, QTableWidgetItem
+)
 
 class SerialReader(QThread):
     data_received = pyqtSignal(str)
